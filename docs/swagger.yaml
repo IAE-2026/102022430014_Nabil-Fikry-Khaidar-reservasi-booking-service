@@ -1,0 +1,11 @@
+openapi: 3.0.0
+info:
+  title: Layanan Reservasi API
+  version: 1.0.0
+  description: API untuk layanan reservasi
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  # Define your API paths here
