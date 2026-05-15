@@ -1,6 +1,13 @@
 -- Extension untuk UUID
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Hapus tabel lama jika ada agar mendapat database yang benar-benar bersih (Fresh Install)
+DROP TABLE IF EXISTS booking_addons CASCADE;
+DROP TABLE IF EXISTS bookings CASCADE;
+DROP TABLE IF EXISTS addons CASCADE;
+DROP TABLE IF EXISTS rooms CASCADE;
+DROP TABLE IF EXISTS guests CASCADE;
+
 -- 1. Tabel Guest (Guest Service)
 CREATE TABLE IF NOT EXISTS guests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
