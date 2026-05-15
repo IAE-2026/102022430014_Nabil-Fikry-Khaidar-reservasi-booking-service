@@ -17,6 +17,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
+	"reservasi/internal/delivery/graphql"
 	"reservasi/internal/delivery/rest"
 	"reservasi/internal/domain"
 	"reservasi/internal/infrastructure"
@@ -25,6 +26,9 @@ import (
 	"reservasi/pkg/middleware"
 
 	_ "reservasi/docs"
+
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -112,9 +116,15 @@ func main() {
 	// 5. Inisialisasi Router Gin
 	r := gin.Default()
 
-	// 6. Swagger UI (Daftarkan SEBELUM middleware agar bisa diakses publik)
+	// 6. Swagger UI & GraphQL Playground (didaftarkan sebelum middleware agar bisa diakses publik)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	
+	// GraphQL Playground (Bebas akses untuk Dosen/Admin)
+	r.GET("/graphql", func(c *gin.Context) {
+		h := playground.Handler("GraphQL", "/graphql/v1/summary")
+		h.ServeHTTP(c.Writer, c.Request)
+	})
+
 	// Daftarkan middleware autentikasi secara global (berlaku untuk semua rute di bawahnya)
 	r.Use(middleware.AuthMiddleware())
 
@@ -127,10 +137,20 @@ func main() {
 		c.JSON(http.StatusOK, res)
 	})
 
-	// 7. Daftarkan Handler Booking Service (REST Handlers)
+	// 7. Daftarkan Handler GraphQL (Eksekusi Kueri - Terlindungi Middleware)
+	r.POST("/graphql/v1/summary", func(c *gin.Context) {
+		srv := handler.NewDefaultServer(graphql.NewExecutableSchema(graphql.Config{
+			Resolvers: &graphql.Resolver{
+				BookingUsecase: bookingUsecase,
+			},
+		}))
+		srv.ServeHTTP(c.Writer, c.Request)
+	})
+
+	// 8. Daftarkan Handler Booking Service (REST Handlers)
 	rest.NewBookingHandler(r, bookingUsecase)
 
-	// 8. Jalankan Server
+	// 9. Jalankan Server
 	log.Println("Server berjalan di port 8080...")
 	r.Run(":8080")
 }
