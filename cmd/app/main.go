@@ -6,8 +6,13 @@
 package main
 
 import (
+	"bufio"
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -26,6 +31,13 @@ import (
 )
 
 func main() {
+	// ============================================================
+	// FLAG: go run cmd/app/main.go --migrate --seed
+	// ============================================================
+	flagMigrate := flag.Bool("migrate", false, "Langsung jalankan migrasi tabel tanpa konfirmasi")
+	flagSeed := flag.Bool("seed", false, "Langsung jalankan seed data tanpa konfirmasi")
+	flag.Parse()
+
 	// 1. Muat environment variable dari .env
 	if err := godotenv.Load("configs/.env"); err != nil {
 		log.Println("Warning: File configs/.env tidak ditemukan, menggunakan variabel environment sistem.")
@@ -35,19 +47,63 @@ func main() {
 	infrastructure.ConnectPostgres()
 	infrastructure.ConnectRedis()
 
-	// 3. Auto Migrate skema database (Agar tabel terbentuk sesuai relasinya di PostgreSQL)
-	// Kita gunakan GORM AutoMigrate yang akan menyamakan dengan struct domain
-	err := infrastructure.DB.AutoMigrate(
-		&domain.Guest{},
-		&domain.Room{},
-		&domain.Addon{},
-		&domain.Booking{},
-		&domain.BookingAddon{},
-	)
-	if err != nil {
-		log.Fatalf("Gagal melakukan migrasi database: %v", err)
+	// ============================================================
+	// 3. Proses Migrasi & Seed (Interaktif atau via Flag)
+	// ============================================================
+	doMigrate := *flagMigrate
+	doSeed := *flagSeed
+
+	// Jika tidak ada flag yang diberikan, tanya admin secara interaktif
+	if !*flagMigrate && !*flagSeed {
+		reader := bufio.NewReader(os.Stdin)
+
+		fmt.Print("\n[?] Apakah ingin menjalankan migrasi tabel ke database? (y/N): ")
+		migrateInput, _ := reader.ReadString('\n')
+		migrateInput = strings.TrimSpace(strings.ToLower(migrateInput))
+		if migrateInput == "y" || migrateInput == "yes" {
+			doMigrate = true
+		}
+
+		fmt.Print("[?] Apakah ingin memasukkan data dummy dari seed_data.sql? (y/N): ")
+		seedInput, _ := reader.ReadString('\n')
+		seedInput = strings.TrimSpace(strings.ToLower(seedInput))
+		if seedInput == "y" || seedInput == "yes" {
+			doSeed = true
+		}
+		fmt.Println()
 	}
-	log.Println("Migrasi tabel database berhasil!")
+
+	// Eksekusi Migrasi
+	if doMigrate {
+		log.Println("Menjalankan migrasi tabel database...")
+		sqlBytes, err := os.ReadFile("migrations/init_scheme.sql")
+		if err != nil {
+			log.Fatalf("Gagal membaca file init_scheme.sql: %v", err)
+		}
+		if err := infrastructure.DB.Exec(string(sqlBytes)).Error; err != nil {
+			log.Printf("Warning saat migrasi (mungkin tabel sudah ada): %v", err)
+		} else {
+			log.Println("Migrasi tabel database berhasil!")
+		}
+	} else {
+		log.Println("Migrasi tabel dilewati.")
+	}
+
+	// Eksekusi Seed
+	if doSeed {
+		log.Println("Memasukkan data dummy dari seed_data.sql...")
+		sqlBytes, err := os.ReadFile("migrations/seed_data.sql")
+		if err != nil {
+			log.Fatalf("Gagal membaca file seed_data.sql: %v", err)
+		}
+		if err := infrastructure.DB.Exec(string(sqlBytes)).Error; err != nil {
+			log.Printf("Warning saat seeding: %v", err)
+		} else {
+			log.Println("Seed data berhasil dimasukkan!")
+		}
+	} else {
+		log.Println("Seed data dilewati.")
+	}
 
 	// 4. Inisialisasi Dependency Injection (Clean Architecture)
 	bookingRepo := repository.NewBookingRepository(infrastructure.DB)

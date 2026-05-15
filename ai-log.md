@@ -22,3 +22,6 @@ implementasikan layer Delivery (REST Handlers) dan Usecase pada layanan Booking 
 
 [15/5/2026 - 01.24]
 Tambahkan anotasi pada setiap handler Gin dan agar Swagger UI bisa diakses menggunakan swag init
+
+[15/5/2026 - 09.58]
+Saya ingin tiap server utama dijalankan sistem akan meminta konfirmasi admin yang menjalankan main.go. apakah ingin migrate ulang tabel ke database? y/N. kemudian apakah ingin memasukkan data di seed_data.sql juga? y/N. kemudian skenario lain adalah admin bisa melewatkan migrasi ulang tabel tapi bisa memasukkan data di seed_data.sql. untuk migrasi bisa menggunakan /migrate dan untuk seed bisa menggunakan /seed

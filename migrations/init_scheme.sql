@@ -2,7 +2,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 1. Tabel Guest (Guest Service)
-CREATE TABLE guests (
+CREATE TABLE IF NOT EXISTS guests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE guests (
 );
 
 -- 2. Tabel Rooms (Catalog Service)
-CREATE TABLE rooms (
+CREATE TABLE IF NOT EXISTS rooms (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(100) NOT NULL,
     location VARCHAR(255) NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE rooms (
 );
 
 -- 3. Tabel Addons (Catalog Service)
-CREATE TABLE addons (
+CREATE TABLE IF NOT EXISTS addons (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(100) NOT NULL,
     price DECIMAL(12, 2) NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE addons (
 
 -- 4. Tabel Bookings (Booking Service)
 -- Mengelola logika penguncian kamar (locking)
-CREATE TABLE bookings (
+CREATE TABLE IF NOT EXISTS bookings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     guest_id UUID REFERENCES guests(id),
     room_id UUID REFERENCES rooms(id),
@@ -48,7 +48,7 @@ CREATE TABLE bookings (
 );
 
 -- 5. Tabel Relasi Booking Addons (Booking Service)
-CREATE TABLE booking_addons (
+CREATE TABLE IF NOT EXISTS booking_addons (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     booking_id UUID REFERENCES bookings(id) ON DELETE CASCADE,
     addon_id UUID REFERENCES addons(id),
