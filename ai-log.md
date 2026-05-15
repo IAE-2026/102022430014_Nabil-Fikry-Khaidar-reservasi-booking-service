@@ -25,3 +25,6 @@ Tambahkan anotasi pada setiap handler Gin dan agar Swagger UI bisa diakses mengg
 
 [15/5/2026 - 09.58]
 Saya ingin tiap server utama dijalankan sistem akan meminta konfirmasi admin yang menjalankan main.go. apakah ingin migrate ulang tabel ke database? y/N. kemudian apakah ingin memasukkan data di seed_data.sql juga? y/N. kemudian skenario lain adalah admin bisa melewatkan migrasi ulang tabel tapi bisa memasukkan data di seed_data.sql. untuk migrasi bisa menggunakan /migrate dan untuk seed bisa menggunakan /seed
+
+[15/5/2026 - 11.50]
+Saya ingin melakukan implementasi Fase 1 penguncian sementara (Hold Room) menggunakan Redis TTL (10 menit) untuk mencegah Double Booking/Race Condition saat user menekan tombol Booking. Tambahkan endpoint POST /rooms/:id/hold dan DELETE /rooms/:id/hold, serta perbarui logika pembuatan pesanan agar memverifikasi kunci Redis sebelum menyimpan ke PostgreSQL.

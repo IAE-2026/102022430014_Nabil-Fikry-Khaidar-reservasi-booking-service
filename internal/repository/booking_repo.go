@@ -4,16 +4,24 @@ import (
 	"errors"
 	"reservasi/internal/domain"
 
+	"context"
+	"time"
+
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
 type bookingRepository struct {
-	db *gorm.DB
+	db    *gorm.DB
+	redis *redis.Client
 }
 
 // NewBookingRepository membuat instance repository baru
-func NewBookingRepository(db *gorm.DB) domain.BookingRepository {
-	return &bookingRepository{db: db}
+func NewBookingRepository(db *gorm.DB, redisClient *redis.Client) domain.BookingRepository {
+	return &bookingRepository{
+		db:    db,
+		redis: redisClient,
+	}
 }
 
 func (r *bookingRepository) CreateBooking(booking *domain.Booking) error {
@@ -75,4 +83,50 @@ func (r *bookingRepository) GetGuestByID(id string) (*domain.Guest, error) {
 		return nil, err
 	}
 	return &guest, nil
+}
+
+// Redis operations
+func (r *bookingRepository) HoldRoom(ctx context.Context, roomID string, guestID string, ttl time.Duration) error {
+	key := "hold:room:" + roomID
+	// SETNX (Set if Not eXists) memastikan hanya 1 orang yang berhasil
+	ok, err := r.redis.SetNX(ctx, key, guestID, ttl).Result()
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return errors.New("kamar sedang ditahan oleh pengguna lain")
+	}
+	return nil
+}
+
+func (r *bookingRepository) ReleaseRoom(ctx context.Context, roomID string, guestID string) error {
+	key := "hold:room:" + roomID
+	
+	// Get current hold
+	currentGuest, err := r.redis.Get(ctx, key).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil // Key tidak ada, sudah dirilis atau expire
+		}
+		return err
+	}
+
+	// Hanya boleh dirilis oleh guest yang memegang lock
+	if currentGuest != guestID {
+		return errors.New("anda tidak memiliki hak untuk membebaskan kamar ini")
+	}
+
+	return r.redis.Del(ctx, key).Err()
+}
+
+func (r *bookingRepository) GetRoomHold(ctx context.Context, roomID string) (string, error) {
+	key := "hold:room:" + roomID
+	val, err := r.redis.Get(ctx, key).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return "", nil // Tidak sedang di-hold
+		}
+		return "", err
+	}
+	return val, nil
 }

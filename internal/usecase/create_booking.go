@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"math"
 	"reservasi/internal/domain"
@@ -40,6 +41,20 @@ func (u *bookingUsecase) CreateBooking(req *domain.CreateBookingRequest) (*domai
 	room, err := u.bookingRepo.GetRoomByID(req.RoomID)
 	if err != nil {
 		return nil, errors.New("kamar tidak ditemukan")
+	}
+
+	// 3b. VERIFIKASI REDIS LOCK
+	// Pastikan guest ini yang memegang lock kamar tersebut
+	ctx := context.Background()
+	heldBy, err := u.bookingRepo.GetRoomHold(ctx, req.RoomID)
+	if err != nil {
+		return nil, errors.New("gagal mengecek status kamar")
+	}
+	if heldBy == "" {
+		return nil, errors.New("sesi pemesanan anda telah habis, silakan mulai ulang")
+	}
+	if heldBy != req.GuestID {
+		return nil, errors.New("kamar ini sedang ditahan oleh pengguna lain")
 	}
 
 	// 4. Pastikan Guest terdaftar

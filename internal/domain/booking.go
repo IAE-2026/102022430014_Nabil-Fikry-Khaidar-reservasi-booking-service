@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"time"
 
 	"github.com/google/uuid"
@@ -42,6 +43,10 @@ type CreateBookingAddonRequest struct {
 	Quantity int    `json:"quantity" binding:"required,min=1"`
 }
 
+type HoldRoomRequest struct {
+	GuestID string `json:"guest_id" binding:"required,uuid"`
+}
+
 // Data Response untuk Summary
 type BookingSummary struct {
 	Booking      *Booking `json:"booking"`
@@ -58,6 +63,11 @@ type BookingRepository interface {
 	GetRoomByID(id string) (*Room, error)
 	GetAddonByID(id string) (*Addon, error)
 	GetGuestByID(id string) (*Guest, error)
+	
+	// Redis temporary hold
+	HoldRoom(ctx context.Context, roomID string, guestID string, ttl time.Duration) error
+	ReleaseRoom(ctx context.Context, roomID string, guestID string) error
+	GetRoomHold(ctx context.Context, roomID string) (string, error)
 }
 
 // BookingUsecase mengatur logika bisnis aplikasi
@@ -65,4 +75,7 @@ type BookingUsecase interface {
 	CreateBooking(req *CreateBookingRequest) (*Booking, error)
 	AddAddon(bookingID string, req *CreateBookingAddonRequest) (*BookingAddon, error)
 	GetSummary(bookingID string) (*BookingSummary, error)
+
+	HoldRoom(roomID string, req *HoldRoomRequest) error
+	ReleaseRoom(roomID string, guestID string) error
 }

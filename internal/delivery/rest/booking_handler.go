@@ -19,6 +19,10 @@ func NewBookingHandler(r *gin.Engine, us domain.BookingUsecase) {
 
 	// Semua route terkait booking
 	// Asumsinya global middleware sudah di-set di main.go untuk API key validation
+	// Room Hold / Lock routes
+	r.POST("/rooms/:id/hold", handler.HoldRoom)
+	r.DELETE("/rooms/:id/hold", handler.ReleaseRoom)
+
 	r.POST("/bookings", handler.CreateBooking)
 	r.POST("/bookings/:id/addons", handler.AddAddon)
 	r.GET("/bookings/:id/summary", handler.GetSummary)
@@ -131,5 +135,85 @@ func (h *BookingHandler) GetSummary(c *gin.Context) {
 		Status:  "success",
 		Message: "Nota total berhasil diambil",
 		Data:    summary,
+	})
+}
+
+// HoldRoom godoc
+// @Summary Menahan sementara kamar (Fase 1 Booking)
+// @Description Endpoint untuk menahan kamar menggunakan Redis selama 10 menit agar tidak diambil orang lain saat mengisi form.
+// @Tags Rooms
+// @Accept json
+// @Produce json
+// @Param X-IAE-KEY header string true "API Key"
+// @Param id path string true "Room ID (UUID)"
+// @Param request body domain.HoldRoomRequest true "Payload Hold"
+// @Success 200 {object} domain.SuccessResponse "Success"
+// @Failure 400 {object} domain.ErrorResponse "Bad Request"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Router /rooms/{id}/hold [post]
+func (h *BookingHandler) HoldRoom(c *gin.Context) {
+	roomID := c.Param("id")
+
+	var req domain.HoldRoomRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+			Status:  "error",
+			Message: "Payload tidak valid: " + err.Error(),
+		})
+		return
+	}
+
+	err := h.bookingUsecase.HoldRoom(roomID, &req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+			Status:  "error",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, domain.SuccessResponse{
+		Status:  "success",
+		Message: "Kamar berhasil ditahan sementara selama 10 menit. Silakan selesaikan form pemesanan.",
+	})
+}
+
+// ReleaseRoom godoc
+// @Summary Melepaskan tahanan kamar (Batal Booking)
+// @Description Endpoint untuk membebaskan kamar jika pengguna membatalkan isi form sebelum 10 menit.
+// @Tags Rooms
+// @Accept json
+// @Produce json
+// @Param X-IAE-KEY header string true "API Key"
+// @Param id path string true "Room ID (UUID)"
+// @Param request body domain.HoldRoomRequest true "Payload Hold (membutuhkan guest_id)"
+// @Success 200 {object} domain.SuccessResponse "Success"
+// @Failure 400 {object} domain.ErrorResponse "Bad Request"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Router /rooms/{id}/hold [delete]
+func (h *BookingHandler) ReleaseRoom(c *gin.Context) {
+	roomID := c.Param("id")
+
+	var req domain.HoldRoomRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+			Status:  "error",
+			Message: "Payload tidak valid: " + err.Error(),
+		})
+		return
+	}
+
+	err := h.bookingUsecase.ReleaseRoom(roomID, req.GuestID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{
+			Status:  "error",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, domain.SuccessResponse{
+		Status:  "success",
+		Message: "Tahanan kamar berhasil dilepas. Kamar tersedia kembali.",
 	})
 }

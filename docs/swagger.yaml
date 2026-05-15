@@ -106,6 +106,13 @@ definitions:
       phone_number:
         type: string
     type: object
+  domain.HoldRoomRequest:
+    properties:
+      guest_id:
+        type: string
+    required:
+    - guest_id
+    type: object
   domain.Meta:
     properties:
       api_version:
@@ -277,4 +284,85 @@ paths:
       summary: Menampilkan nota total (Summary)
       tags:
       - Bookings
+  /rooms/{id}/hold:
+    delete:
+      consumes:
+      - application/json
+      description: Endpoint untuk membebaskan kamar jika pengguna membatalkan isi
+        form sebelum 10 menit.
+      parameters:
+      - description: API Key
+        in: header
+        name: X-IAE-KEY
+        required: true
+        type: string
+      - description: Room ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payload Hold (membutuhkan guest_id)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.HoldRoomRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Melepaskan tahanan kamar (Batal Booking)
+      tags:
+      - Rooms
+    post:
+      consumes:
+      - application/json
+      description: Endpoint untuk menahan kamar menggunakan Redis selama 10 menit
+        agar tidak diambil orang lain saat mengisi form.
+      parameters:
+      - description: API Key
+        in: header
+        name: X-IAE-KEY
+        required: true
+        type: string
+      - description: Room ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payload Hold
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.HoldRoomRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Menahan sementara kamar (Fase 1 Booking)
+      tags:
+      - Rooms
 swagger: "2.0"

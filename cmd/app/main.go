@@ -110,7 +110,7 @@ func main() {
 	}
 
 	// 4. Inisialisasi Dependency Injection (Clean Architecture)
-	bookingRepo := repository.NewBookingRepository(infrastructure.DB)
+	bookingRepo := repository.NewBookingRepository(infrastructure.DB, infrastructure.RedisClient)
 	bookingUsecase := usecase.NewBookingUsecase(bookingRepo)
 
 	// 5. Inisialisasi Router Gin
