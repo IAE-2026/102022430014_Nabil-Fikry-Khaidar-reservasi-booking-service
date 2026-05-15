@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM golang:1.21-alpine AS builder
+FROM golang:1.26.3-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -37,7 +37,7 @@ COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/configs ./configs
 
 # Export port
-EXPOSE 8080
+EXPOSE 7070
 
 # Command untuk menjalankan aplikasi
 CMD ["./booking-server"]

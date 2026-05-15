@@ -155,6 +155,10 @@ func main() {
 	rest.NewBookingHandler(r, bookingUsecase)
 
 	// 9. Jalankan Server
-	log.Println("Server berjalan di port 8080...")
-	r.Run(":8080")
+	port := os.Getenv("APP_PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Printf("Server berjalan di port %s...", port)
+	r.Run(":" + port)
 }

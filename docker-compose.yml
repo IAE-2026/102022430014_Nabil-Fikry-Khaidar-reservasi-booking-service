@@ -10,20 +10,24 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password123
       POSTGRES_DB: iae_reservasi
-    ports:
-      - "5432:5432"
+    # ports:
+    #   - "5432:5432"
+    expose:
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - iae-network
-
+    
   # Service 2: Redis (Untuk Temporary Hold)
   redis:
     image: redis:7-alpine
     container_name: iae-redis
     restart: always
-    ports:
-      - "6379:6379"
+    # ports:
+    # - "6379:6379"
+    expose:
+      - "6379"
     volumes:
       - redis_data:/data
     networks:
@@ -31,7 +35,7 @@ services:
 
   # Service 3: Golang Booking Service
   app:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     container_name: iae-booking-service
@@ -40,7 +44,7 @@ services:
       - db
       - redis
     ports:
-      - "8080:8080"
+      - "7070:7070"
     environment:
       # Koneksi ke DB menggunakan nama service docker 'db', bukan localhost
       - DB_HOST=db
@@ -54,6 +58,7 @@ services:
       - IAE_SERVICE_NAME=booking_service
       - IAE_API_VERSION=v1
       - IAE_KEY=102022430014
+      - APP_PORT=7070
       # Flag otomatis migrate dan seed saat container start (tanpa prompt interactive)
       - APP_AUTO_MIGRATE=true
       - APP_AUTO_SEED=true
@@ -65,7 +70,7 @@ volumes:
   postgres_data:
   redis_data:
 
-# Mendefinisikan Network tertutup agar service bisa saling berkomunikasi
+    # Mendefinisikan Network tertutup agar service bisa saling berkomunikasi
 networks:
   iae-network:
     driver: bridge
