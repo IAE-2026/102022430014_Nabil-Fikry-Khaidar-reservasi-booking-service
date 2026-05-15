@@ -27,4 +27,10 @@ Tambahkan anotasi pada setiap handler Gin dan agar Swagger UI bisa diakses mengg
 Saya ingin tiap server utama dijalankan sistem akan meminta konfirmasi admin yang menjalankan main.go. apakah ingin migrate ulang tabel ke database? y/N. kemudian apakah ingin memasukkan data di seed_data.sql juga? y/N. kemudian skenario lain adalah admin bisa melewatkan migrasi ulang tabel tapi bisa memasukkan data di seed_data.sql. untuk migrasi bisa menggunakan /migrate dan untuk seed bisa menggunakan /seed
 
 [15/5/2026 - 11.50]
-Saya ingin melakukan implementasi Fase 1 penguncian sementara (Hold Room) menggunakan Redis TTL (10 menit) untuk mencegah Double Booking/Race Condition saat user menekan tombol Booking. Tambahkan endpoint POST /rooms/:id/hold dan DELETE /rooms/:id/hold, serta perbarui logika pembuatan pesanan agar memverifikasi kunci Redis sebelum menyimpan ke PostgreSQL.
+Saya ingin melakukan implementasi Fase 1 penguncian sementara (Hold Room) menggunakan Redis TTL (10 mnt) untuk mencegah double booking/race condition saat user menekan tombol booking. tambahkan endpoint POST /rooms/:id/hold dan DELETE /rooms/:id/hold, serta perbarui logika pembuatan pesanan agar memverifikasi kunci di redis sebelum menyimpan ke database utama postgreSQL.
+
+[15/5/2026 - 15.36]
+Buatkan skema, model, resolver, dan endpoint GraphQL untuk mengambil data detail booking beserta relasinya ( seperti rincian kamar, rincian tamu, add-ons). sesuaikan juga dg struktur database yang di GORM dan pastikan berjalan di jalur POST /graphql/v1/summary.
+
+[15/5/2026 - 15.32]
+Buat konfigurasi dockerfile multi-stage menggunakan golang 1.22-alpine dan alpine latest, serta docker-compose.yml untuk menghubungkan aplikasi dengan PostgreSQL 15 dan Redis 7 dalam satu network internal.

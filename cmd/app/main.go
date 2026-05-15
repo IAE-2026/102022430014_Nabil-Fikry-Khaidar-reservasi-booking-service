@@ -54,11 +54,15 @@ func main() {
 	// ============================================================
 	// 3. Proses Migrasi & Seed (Interaktif atau via Flag)
 	// ============================================================
-	doMigrate := *flagMigrate
-	doSeed := *flagSeed
+	// Baca environment variables untuk Docker auto-migrate
+	autoMigrate := os.Getenv("APP_AUTO_MIGRATE") == "true"
+	autoSeed := os.Getenv("APP_AUTO_SEED") == "true"
 
-	// Jika tidak ada flag yang diberikan, tanya admin secara interaktif
-	if !*flagMigrate && !*flagSeed {
+	doMigrate := *flagMigrate || autoMigrate
+	doSeed := *flagSeed || autoSeed
+
+	// Jika tidak ada flag yang diberikan dan bukan auto, tanya admin secara interaktif
+	if !doMigrate && !doSeed {
 		reader := bufio.NewReader(os.Stdin)
 
 		fmt.Print("\n[?] Apakah ingin menjalankan migrasi tabel ke database? (y/N): ")
