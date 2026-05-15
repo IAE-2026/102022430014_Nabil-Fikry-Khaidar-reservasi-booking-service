@@ -30,5 +30,8 @@ func ConnectPostgres() {
 		log.Fatalf("Gagal terhubung ke database PostgreSQL: %v", err)
 	}
 
+	// Aktifkan extension untuk UUID jika belum ada
+	_ = DB.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"")
+
 	log.Println("Koneksi ke PostgreSQL berhasil menggunakan GORM!")
 }

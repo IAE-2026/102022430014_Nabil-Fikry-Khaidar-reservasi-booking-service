@@ -24,6 +24,18 @@ func NewBookingHandler(r *gin.Engine, us domain.BookingUsecase) {
 	r.GET("/bookings/:id/summary", handler.GetSummary)
 }
 
+// CreateBooking godoc
+// @Summary Membuat pesanan awal (mengunci kamar)
+// @Description Endpoint untuk membuat reservasi awal dengan status LOCKED
+// @Tags Bookings
+// @Accept json
+// @Produce json
+// @Param X-IAE-KEY header string true "API Key"
+// @Param request body domain.CreateBookingRequest true "Payload Reservasi"
+// @Success 200 {object} domain.SuccessResponse{data=domain.Booking} "Success"
+// @Failure 400 {object} domain.ErrorResponse "Bad Request"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Router /bookings [post]
 func (h *BookingHandler) CreateBooking(c *gin.Context) {
 	var req domain.CreateBookingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -51,6 +63,19 @@ func (h *BookingHandler) CreateBooking(c *gin.Context) {
 	})
 }
 
+// AddAddon godoc
+// @Summary Menambahkan layanan tambahan ke pesanan
+// @Description Endpoint untuk menambahkan addon (sarapan, asuransi, dll) ke dalam booking yang sudah ada
+// @Tags Bookings
+// @Accept json
+// @Produce json
+// @Param X-IAE-KEY header string true "API Key"
+// @Param id path string true "Booking ID (UUID)"
+// @Param request body domain.CreateBookingAddonRequest true "Payload Addon"
+// @Success 200 {object} domain.SuccessResponse{data=domain.BookingAddon} "Success"
+// @Failure 400 {object} domain.ErrorResponse "Bad Request"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Router /bookings/{id}/addons [post]
 func (h *BookingHandler) AddAddon(c *gin.Context) {
 	bookingID := c.Param("id")
 
@@ -79,6 +104,17 @@ func (h *BookingHandler) AddAddon(c *gin.Context) {
 	})
 }
 
+// GetSummary godoc
+// @Summary Menampilkan nota total (Summary)
+// @Description Mendapatkan ringkasan rincian biaya kamar dan layanan tambahan
+// @Tags Bookings
+// @Produce json
+// @Param X-IAE-KEY header string true "API Key"
+// @Param id path string true "Booking ID (UUID)"
+// @Success 200 {object} domain.SuccessResponse{data=domain.BookingSummary} "Success"
+// @Failure 404 {object} domain.ErrorResponse "Not Found"
+// @Failure 401 {object} domain.ErrorResponse "Unauthorized"
+// @Router /bookings/{id}/summary [get]
 func (h *BookingHandler) GetSummary(c *gin.Context) {
 	bookingID := c.Param("id")
 

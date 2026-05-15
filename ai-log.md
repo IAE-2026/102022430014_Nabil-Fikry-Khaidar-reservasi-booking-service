@@ -19,3 +19,6 @@ lakukan konfigurasi pada file main.go agar menggunakan configuration environment
 
 [15/5/2026 - 01.12]
 implementasikan layer Delivery (REST Handlers) dan Usecase pada layanan Booking Service menggunakan framework gin ini dengan pola Clean Architecture, di mana saya memerlukan beberapa endpoint utama sesuai kontrak tim pada file kontrak API.md. pastikan seluruh respon mematuhi standar Integration Contract dengan wrapper JSON yang terdiri dari field status, message, data, dan meta (berisi informasi service name dan api version) , perhatikan tetep gunakan grom untuk manajemen data di PostgreSQL, serta terapkan pengamanan header X-IAE-KEY menggunakan nilai "102022430014"
+
+[15/5/2026 - 01.24]
+Tambahkan anotasi pada setiap handler Gin dan agar Swagger UI bisa diakses menggunakan swag init

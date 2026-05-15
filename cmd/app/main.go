@@ -1,3 +1,8 @@
+// @title Layanan Reservasi API
+// @version 1.0
+// @description API untuk layanan reservasi booking hotel (IAE Tubes)
+// @host localhost:8080
+// @BasePath /
 package main
 
 import (
@@ -13,6 +18,11 @@ import (
 	"reservasi/internal/repository"
 	"reservasi/internal/usecase"
 	"reservasi/pkg/middleware"
+
+	_ "reservasi/docs"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func main() {
@@ -45,11 +55,14 @@ func main() {
 
 	// 5. Inisialisasi Router Gin
 	r := gin.Default()
+
+	// 6. Swagger UI (Daftarkan SEBELUM middleware agar bisa diakses publik)
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	
-	// Daftarkan middleware autentikasi secara global
+	// Daftarkan middleware autentikasi secara global (berlaku untuk semua rute di bawahnya)
 	r.Use(middleware.AuthMiddleware())
 
-	// Endpoint dasar (opsional untuk ngecek status aja)
+	// Endpoint dasar
 	r.GET("/status", func(c *gin.Context) {
 		res := domain.SuccessResponse{
 			Status:  "success",
@@ -58,10 +71,10 @@ func main() {
 		c.JSON(http.StatusOK, res)
 	})
 
-	// 6. Daftarkan Handler Booking Service (REST Handlers)
+	// 7. Daftarkan Handler Booking Service (REST Handlers)
 	rest.NewBookingHandler(r, bookingUsecase)
 
-	// 7. Jalankan Server
+	// 8. Jalankan Server
 	log.Println("Server berjalan di port 8080...")
 	r.Run(":8080")
 }
