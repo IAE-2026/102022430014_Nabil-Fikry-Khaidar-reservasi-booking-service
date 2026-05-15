@@ -19,13 +19,14 @@ func NewBookingHandler(r *gin.Engine, us domain.BookingUsecase) {
 
 	// Semua route terkait booking
 	// Asumsinya global middleware sudah di-set di main.go untuk API key validation
+	
 	// Room Hold / Lock routes
 	r.POST("/rooms/:id/hold", handler.HoldRoom)
 	r.DELETE("/rooms/:id/hold", handler.ReleaseRoom)
 
 	r.POST("/bookings", handler.CreateBooking)
-	r.POST("/bookings/:id/addons", handler.AddAddon)
-	r.GET("/bookings/:id/summary", handler.GetSummary)
+	r.POST("/:id/addons", handler.AddAddon)
+	r.GET("/:id/summary", handler.GetSummary)
 }
 
 // CreateBooking godoc
@@ -79,7 +80,7 @@ func (h *BookingHandler) CreateBooking(c *gin.Context) {
 // @Success 200 {object} domain.SuccessResponse{data=domain.BookingAddon} "Success"
 // @Failure 400 {object} domain.ErrorResponse "Bad Request"
 // @Failure 401 {object} domain.ErrorResponse "Unauthorized"
-// @Router /bookings/{id}/addons [post]
+// @Router /{id}/addons [post]
 func (h *BookingHandler) AddAddon(c *gin.Context) {
 	bookingID := c.Param("id")
 
@@ -118,7 +119,7 @@ func (h *BookingHandler) AddAddon(c *gin.Context) {
 // @Success 200 {object} domain.SuccessResponse{data=domain.BookingSummary} "Success"
 // @Failure 404 {object} domain.ErrorResponse "Not Found"
 // @Failure 401 {object} domain.ErrorResponse "Unauthorized"
-// @Router /bookings/{id}/summary [get]
+// @Router /{id}/summary [get]
 func (h *BookingHandler) GetSummary(c *gin.Context) {
 	bookingID := c.Param("id")
 
@@ -217,3 +218,4 @@ func (h *BookingHandler) ReleaseRoom(c *gin.Context) {
 		Message: "Tahanan kamar berhasil dilepas. Kamar tersedia kembali.",
 	})
 }
+

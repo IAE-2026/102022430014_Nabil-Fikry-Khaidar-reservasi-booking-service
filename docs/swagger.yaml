@@ -161,47 +161,7 @@ info:
   title: Layanan Reservasi API
   version: "1.0"
 paths:
-  /bookings:
-    post:
-      consumes:
-      - application/json
-      description: Endpoint untuk membuat reservasi awal dengan status LOCKED
-      parameters:
-      - description: API Key
-        in: header
-        name: X-IAE-KEY
-        required: true
-        type: string
-      - description: Payload Reservasi
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/domain.CreateBookingRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Success
-          schema:
-            allOf:
-            - $ref: '#/definitions/domain.SuccessResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/domain.Booking'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/domain.ErrorResponse'
-      summary: Membuat pesanan awal (mengunci kamar)
-      tags:
-      - Bookings
-  /bookings/{id}/addons:
+  /{id}/addons:
     post:
       consumes:
       - application/json
@@ -247,7 +207,7 @@ paths:
       summary: Menambahkan layanan tambahan ke pesanan
       tags:
       - Bookings
-  /bookings/{id}/summary:
+  /{id}/summary:
     get:
       description: Mendapatkan ringkasan rincian biaya kamar dan layanan tambahan
       parameters:
@@ -282,6 +242,46 @@ paths:
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
       summary: Menampilkan nota total (Summary)
+      tags:
+      - Bookings
+  /bookings:
+    post:
+      consumes:
+      - application/json
+      description: Endpoint untuk membuat reservasi awal dengan status LOCKED
+      parameters:
+      - description: API Key
+        in: header
+        name: X-IAE-KEY
+        required: true
+        type: string
+      - description: Payload Reservasi
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            allOf:
+            - $ref: '#/definitions/domain.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.Booking'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Membuat pesanan awal (mengunci kamar)
       tags:
       - Bookings
   /rooms/{id}/hold:
