@@ -74,6 +74,14 @@ func (u *bookingUsecase) CreateBooking(req *domain.CreateBookingRequest) (*domai
 	totalRoomPrice := room.PricePerNight * float64(nights)
 	expiresAt := time.Now().Add(1 * time.Hour) // Diberi waktu 1 jam untuk bayar
 
+	if room.Status != "AVAILABLE" {
+		return nil, errors.New("kamar tidak tersedia")
+	}
+
+	if err := u.bookingRepo.UpdateRoomStatus(req.RoomID, "LOCKED"); err != nil {
+		return nil, errors.New("gagal mengunci kamar di database")
+	}
+
 	// 7. Simpan Booking
 	booking := &domain.Booking{
 		GuestID:          guestID,
@@ -88,8 +96,12 @@ func (u *bookingUsecase) CreateBooking(req *domain.CreateBookingRequest) (*domai
 	}
 
 	if err := u.bookingRepo.CreateBooking(booking); err != nil {
+		_ = u.bookingRepo.UpdateRoomStatus(req.RoomID, "AVAILABLE")
 		return nil, errors.New("gagal membuat pesanan: " + err.Error())
 	}
+
+	// Lepas sementara hold Redis agar tidak mengunci resource berlebih
+	_ = u.bookingRepo.ReleaseRoom(context.Background(), req.RoomID, req.GuestID)
 
 	return booking, nil
 }

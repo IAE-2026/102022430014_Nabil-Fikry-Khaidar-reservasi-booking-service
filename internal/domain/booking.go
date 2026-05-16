@@ -60,6 +60,8 @@ type BookingRepository interface {
 	CreateBookingAddon(addon *BookingAddon) error
 	GetBookingByID(id string) (*Booking, error)
 	UpdateBooking(booking *Booking) error
+	UpdateBookingStatus(bookingID string, status string) error
+	UpdateRoomStatus(roomID string, status string) error
 	GetRoomByID(id string) (*Room, error)
 	GetAddonByID(id string) (*Addon, error)
 	GetGuestByID(id string) (*Guest, error)
@@ -75,6 +77,7 @@ type BookingUsecase interface {
 	CreateBooking(req *CreateBookingRequest) (*Booking, error)
 	AddAddon(bookingID string, req *CreateBookingAddonRequest) (*BookingAddon, error)
 	GetSummary(bookingID string) (*BookingSummary, error)
+	HandleBookingPaymentTimeout(bookingID string) error
 
 	HoldRoom(roomID string, req *HoldRoomRequest) error
 	ReleaseRoom(roomID string, guestID string) error
