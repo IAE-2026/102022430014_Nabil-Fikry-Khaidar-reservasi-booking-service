@@ -120,19 +120,14 @@ func main() {
 	// 5. Inisialisasi Router Gin
 	r := gin.Default()
 
-	// 6. Swagger UI & GraphQL Playground (didaftarkan sebelum middleware agar bisa diakses publik)
+	// 6. Swagger UI & GraphQL Playground (didaftarkan publik)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	
-	// GraphQL Playground (Bebas akses untuk Dosen/Admin)
 	r.GET("/graphql", func(c *gin.Context) {
 		h := playground.Handler("GraphQL", "/graphql/v1/summary")
 		h.ServeHTTP(c.Writer, c.Request)
 	})
 
-	// Daftarkan middleware autentikasi secara global (berlaku untuk semua rute di bawahnya)
-	r.Use(middleware.AuthMiddleware())
-
-	// Endpoint dasar
+	// Status endpoint publik
 	r.GET("/status", func(c *gin.Context) {
 		res := domain.SuccessResponse{
 			Status:  "success",
@@ -141,18 +136,23 @@ func main() {
 		c.JSON(http.StatusOK, res)
 	})
 
-	// 7. Daftarkan Handler GraphQL (Eksekusi Kueri - Terlindungi Middleware)
-	r.POST("/graphql/v1/summary", func(c *gin.Context) {
-		srv := handler.NewDefaultServer(graphql.NewExecutableSchema(graphql.Config{
-			Resolvers: &graphql.Resolver{
-				BookingUsecase: bookingUsecase,
-			},
-		}))
-		srv.ServeHTTP(c.Writer, c.Request)
+	// 7. Buat GraphQL server sekali untuk handler terproteksi
+	graphqlServer := handler.NewDefaultServer(graphql.NewExecutableSchema(graphql.Config{
+		Resolvers: &graphql.Resolver{
+			BookingUsecase: bookingUsecase,
+		},
+	}))
+
+	// 8. Daftarkan middleware autentikasi untuk route terproteksi
+	protected := r.Group("/")
+	protected.Use(middleware.AuthMiddleware())
+
+	protected.POST("/graphql/v1/summary", func(c *gin.Context) {
+		graphqlServer.ServeHTTP(c.Writer, c.Request)
 	})
 
-	// 8. Daftarkan Handler Booking Service (REST Handlers)
-	rest.NewBookingHandler(r, bookingUsecase)
+	// 9. Daftarkan Handler Booking Service (REST Handlers)
+	rest.NewBookingHandler(protected, bookingUsecase)
 
 	// 9. Jalankan Server
 	port := os.Getenv("APP_PORT")

@@ -12,21 +12,21 @@ type BookingHandler struct {
 }
 
 // NewBookingHandler mendaftarkan endpoint untuk Booking Service
-func NewBookingHandler(r *gin.Engine, us domain.BookingUsecase) {
+func NewBookingHandler(r gin.IRouter, us domain.BookingUsecase) {
 	handler := &BookingHandler{
 		bookingUsecase: us,
 	}
 
-	// Semua route terkait booking
-	// Asumsinya global middleware sudah di-set di main.go untuk API key validation
-	
+	// Semua route terkait booking dan room
+	// Asumsinya middleware autentikasi diterapkan pada group yang memanggil fungsi ini.
+
 	// Room Hold / Lock routes
 	r.POST("/rooms/:id/hold", handler.HoldRoom)
 	r.DELETE("/rooms/:id/hold", handler.ReleaseRoom)
 
 	r.POST("/bookings", handler.CreateBooking)
-	r.POST("/:id/addons", handler.AddAddon)
-	r.GET("/:id/summary", handler.GetSummary)
+	r.POST("/bookings/:id/addons", handler.AddAddon)
+	r.GET("/bookings/:id/summary", handler.GetSummary)
 }
 
 // CreateBooking godoc
@@ -218,4 +218,3 @@ func (h *BookingHandler) ReleaseRoom(c *gin.Context) {
 		Message: "Tahanan kamar berhasil dilepas. Kamar tersedia kembali.",
 	})
 }
-
